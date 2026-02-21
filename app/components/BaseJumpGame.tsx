@@ -383,7 +383,7 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
         canvas.removeEventListener('touchcancel', handleTouchEnd);
       }
     };
-  }, [gameStarted, gameId, highScore, onGameOver]);
+  }, [gameStarted, gameId, highScore, onGameOver, userFid]);
 
   const handleCheckIn = async () => {
     try {
