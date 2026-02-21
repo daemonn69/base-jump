@@ -328,8 +328,16 @@ export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJump
           localStorage.setItem('baseJumpHighScore', currentFinalScore.toString());
         }
 
-        // Use real FID or a mock one for local browser testing
-        const currentFid = userFid || Math.floor(Math.random() * 100000);
+        // Reuse or create a persistent local anonymous ID
+        let currentFid: string | number = userFid as number;
+        if (!currentFid) {
+          let savedAnonFid = localStorage.getItem('baseJumpAnonFid');
+          if (!savedAnonFid) {
+            savedAnonFid = Math.floor(Math.random() * 1000000).toString();
+            localStorage.setItem('baseJumpAnonFid', savedAnonFid);
+          }
+          currentFid = savedAnonFid;
+        }
 
         if (currentFinalScore > 0) {
           // Fire and forget score save
