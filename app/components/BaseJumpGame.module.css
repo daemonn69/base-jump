@@ -48,6 +48,30 @@
   opacity: 0.95;
 }
 
+.leaderboardContainer {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 15px;
+  width: 90%;
+  max-width: 300px;
+  height: 250px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.leaderboardContainer ol {
+  padding-left: 20px;
+  margin: 0;
+  font-family: var(--font-source-code-pro), monospace;
+}
+
+.leaderboardContainer li {
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
 .score {
   font-size: 64px;
   font-weight: 900;

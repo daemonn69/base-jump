@@ -22,6 +22,23 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
   const [streak, setStreak] = useState(0);
   const [lastCheckIn, setLastCheckIn] = useState<string | null>(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<{ fid: string, score: number }[]>([]);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
+
+  const loadLeaderboard = async () => {
+    try {
+      setIsLoadingLeaderboard(true);
+      setShowLeaderboard(true);
+      const res = await fetch('/api/leaderboard');
+      const data = await res.json();
+      if (Array.isArray(data)) setLeaderboard(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingLeaderboard(false);
+    }
+  };
 
   // Set fullscreen dimensions on client side
   useEffect(() => {
@@ -309,6 +326,16 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
           setHighScore(currentFinalScore);
           localStorage.setItem('baseJumpHighScore', currentFinalScore.toString());
         }
+
+        if (userFid && currentFinalScore > 0) {
+          // Fire and forget score save
+          fetch('/api/leaderboard', {
+            method: 'POST',
+            body: JSON.stringify({ fid: userFid, score: currentFinalScore }),
+            headers: { 'Content-Type': 'application/json' }
+          }).catch(console.error);
+        }
+
         if (onGameOver) onGameOver(currentFinalScore);
         return; // stop updating
       }
@@ -386,7 +413,7 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
 
   return (
     <div className={styles.gameContainer}>
-      {!gameStarted && !isGameOver && (
+      {!gameStarted && !isGameOver && !showLeaderboard && (
         <div className={styles.overlay}>
           <h2>BASE JUMP</h2>
           {userFid && <p>Welcome back, FID: {userFid}!</p>}
@@ -397,16 +424,41 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
               onClick={handleCheckIn}
               disabled={lastCheckIn === new Date().toISOString().split('T')[0] || isCheckingIn}
             >
-              {isCheckingIn ? "Checking in..." : lastCheckIn === new Date().toISOString().split('T')[0] ? "Checked In ✓" : "Daily Check-In"}
+              {isCheckingIn ? "Checking..." : lastCheckIn === new Date().toISOString().split('T')[0] ? "Checked In ✓" : "Daily Check-In"}
             </button>
           </div>
           <div className={styles.highScoreTag}>HIGH SCORE: {highScore}</div>
           <p>
-            Tap & hold left or right to move.<br />
+            Tap & hold left or right.<br />
             Let&apos;s go TO THE MOON! 🚀
           </p>
           <button className={styles.button} onClick={() => setGameStarted(true)}>
             START JUMP
+          </button>
+          <button className={styles.button} onClick={loadLeaderboard} style={{ marginTop: '10px' }}>
+            GLOBAL TOP
+          </button>
+        </div>
+      )}
+
+      {showLeaderboard && (
+        <div className={styles.overlay}>
+          <h2>GLOBAL TOP</h2>
+          <div className={styles.leaderboardContainer}>
+            {isLoadingLeaderboard ? (
+              <p>Loading...</p>
+            ) : leaderboard.length === 0 ? (
+              <p>No scores yet.</p>
+            ) : (
+              <ol>
+                {leaderboard.map((entry, index) => (
+                  <li key={index}>FID {entry.fid}: {entry.score}</li>
+                ))}
+              </ol>
+            )}
+          </div>
+          <button className={styles.button} onClick={() => setShowLeaderboard(false)}>
+            BACK
           </button>
         </div>
       )}
