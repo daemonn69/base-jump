@@ -7,9 +7,10 @@ import styles from './BaseJumpGame.module.css';
 interface BaseJumpGameProps {
   onGameOver?: (score: number) => void;
   userFid?: number;
+  userName?: string;
 }
 
-export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps) {
+export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJumpGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { sendTransactionAsync } = useSendTransaction();
   const [dimensions, setDimensions] = useState({ width: 400, height: 600 });
@@ -22,7 +23,7 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
   const [streak, setStreak] = useState(0);
   const [lastCheckIn, setLastCheckIn] = useState<string | null>(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
-  const [leaderboard, setLeaderboard] = useState<{ fid: string, score: number }[]>([]);
+  const [leaderboard, setLeaderboard] = useState<{ fid: string, username: string, rawMember?: string, score: number }[]>([]);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
 
@@ -334,7 +335,7 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
           // Fire and forget score save
           fetch('/api/leaderboard', {
             method: 'POST',
-            body: JSON.stringify({ fid: currentFid, score: currentFinalScore }),
+            body: JSON.stringify({ fid: currentFid, username: userName, score: currentFinalScore }),
             headers: { 'Content-Type': 'application/json' }
           }).catch(console.error);
         }
@@ -448,7 +449,15 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
                 localStorage.removeItem('baseJumpHighScore');
                 setHighScore(0);
                 if (userFid) {
-                  await fetch('/api/leaderboard', { method: 'DELETE', body: JSON.stringify({ fid: userFid }) });
+                  // Make sure to delete ALL entries containing this userFid
+                  const entryToDelete = leaderboard.find(e => e.fid === userFid.toString());
+                  await fetch('/api/leaderboard', {
+                    method: 'DELETE',
+                    body: JSON.stringify({
+                      fid: userFid,
+                      rawMember: entryToDelete?.rawMember
+                    })
+                  });
                   alert('Рекорд сброшен в базе!');
                 } else {
                   alert('Рекорд сброшен локально!');
@@ -473,7 +482,7 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
             ) : (
               <ol>
                 {leaderboard.map((entry, index) => (
-                  <li key={index}>FID {entry.fid}: {entry.score}</li>
+                  <li key={index}>{entry.username}: {entry.score}</li>
                 ))}
               </ol>
             )}

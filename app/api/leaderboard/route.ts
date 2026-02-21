@@ -33,8 +33,20 @@ export async function GET() {
 
         // The format returned by withScores is [member1, score1, member2, score2...]
         for (let i = 0; i < leaderboard.length; i += 2) {
+            const rawMember = String(leaderboard[i]);
+            let displayFid = rawMember;
+            let displayName = "";
+
+            if (rawMember.includes('#')) {
+                const parts = rawMember.split('#');
+                displayName = parts[0];
+                displayFid = parts[1];
+            }
+
             formattedLeaderboard.push({
-                fid: leaderboard[i],
+                fid: displayFid,
+                username: displayName || `FID ${displayFid}`,
+                rawMember: rawMember,
                 score: Number(leaderboard[i + 1])
             });
         }
@@ -55,17 +67,19 @@ export async function POST(request: Request) {
     }
 
     try {
-        const { fid, score } = await request.json();
+        const { fid, username, score } = await request.json();
 
         if (!fid || typeof score !== 'number') {
             return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
         }
 
+        const memberId = username ? `${username}#${fid}` : fid.toString();
+
         // ZSCORE to get current score using JSON body for Vercel KV compat
         const scoreRes = await fetch(url, {
             method: "POST",
             headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-            body: JSON.stringify(["ZSCORE", "base_jump_leaderboard", fid.toString()])
+            body: JSON.stringify(["ZSCORE", "base_jump_leaderboard", memberId])
         });
         const scoreBody = await scoreRes.json();
         const currentScore = scoreBody.result; // could be null if no score exists
@@ -75,7 +89,7 @@ export async function POST(request: Request) {
             await fetch(url, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-                body: JSON.stringify(["ZADD", "base_jump_leaderboard", score.toString(), fid.toString()])
+                body: JSON.stringify(["ZADD", "base_jump_leaderboard", score.toString(), memberId])
             });
         }
 
@@ -95,13 +109,16 @@ export async function DELETE(request: Request) {
     }
 
     try {
-        const { fid } = await request.json();
-        if (!fid) return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
+        // Can optionally pass `rawMember` exactly, to delete it
+        const { fid, rawMember } = await request.json();
+        if (!fid && !rawMember) return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
+
+        const memberToDelete = rawMember || fid.toString();
 
         await fetch(url, {
             method: "POST",
             headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-            body: JSON.stringify(["ZREM", "base_jump_leaderboard", fid.toString()])
+            body: JSON.stringify(["ZREM", "base_jump_leaderboard", memberToDelete])
         });
 
         return NextResponse.json({ success: true });

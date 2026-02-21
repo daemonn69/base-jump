@@ -37,7 +37,10 @@ export default function Home() {
 
   return (
     <main className={styles.mainContainer}>
-      <BaseJumpGame userFid={authData?.user?.fid || context?.user?.fid} />
+      <BaseJumpGame
+        userFid={authData?.user?.fid || context?.user?.fid}
+        userName={context?.user?.username}
+      />
     </main>
   );
 }
