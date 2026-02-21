@@ -99,31 +99,3 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Failed to save score' }, { status: 500 });
     }
 }
-
-export async function DELETE(request: Request) {
-    const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-    const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-
-    if (!url || !token) {
-        return NextResponse.json({ error: 'Redis is not configured' }, { status: 500 });
-    }
-
-    try {
-        // Can optionally pass `rawMember` exactly, to delete it
-        const { fid, rawMember } = await request.json();
-        if (!fid && !rawMember) return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
-
-        const memberToDelete = rawMember || fid.toString();
-
-        await fetch(url, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-            body: JSON.stringify(["ZREM", "base_jump_leaderboard", memberToDelete])
-        });
-
-        return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error('Failed to delete score:', error);
-        return NextResponse.json({ error: 'Failed' }, { status: 500 });
-    }
-}

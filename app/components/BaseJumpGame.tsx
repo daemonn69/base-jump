@@ -420,7 +420,7 @@ export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJump
       {!gameStarted && !isGameOver && !showLeaderboard && (
         <div className={styles.overlay}>
           <h2>BASE JUMP</h2>
-          {userFid && <p>Welcome back, FID: {userFid}!</p>}
+          {userFid && <p>Welcome back, {userName ? userName : `FID: ${userFid}`}!</p>}
           <div className={styles.streakContainer}>
             <span>🔥 Streak: {streak}</span>
             <button
@@ -441,32 +441,6 @@ export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJump
           </button>
           <button className={styles.button} onClick={loadLeaderboard} style={{ marginTop: '10px' }}>
             GLOBAL TOP
-          </button>
-
-          <button
-            onClick={async () => {
-              if (confirm("Вы уверены что хотите обнулить свой рекорд?")) {
-                localStorage.removeItem('baseJumpHighScore');
-                setHighScore(0);
-                if (userFid) {
-                  // Make sure to delete ALL entries containing this userFid
-                  const entryToDelete = leaderboard.find(e => e.fid === userFid.toString());
-                  await fetch('/api/leaderboard', {
-                    method: 'DELETE',
-                    body: JSON.stringify({
-                      fid: userFid,
-                      rawMember: entryToDelete?.rawMember
-                    })
-                  });
-                  alert('Рекорд сброшен в базе!');
-                } else {
-                  alert('Рекорд сброшен локально!');
-                }
-              }
-            }}
-            style={{ marginTop: '20px', fontSize: '12px', background: 'transparent', color: '#ff4d4f', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-source-code-pro), monospace' }}
-          >
-            [Сбросить рекорд]
           </button>
         </div>
       )}
