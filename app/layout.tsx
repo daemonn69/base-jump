@@ -9,13 +9,23 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: farcasterConfig.miniapp.name,
     description: farcasterConfig.miniapp.description,
+    openGraph: {
+      title: farcasterConfig.miniapp.name,
+      description: farcasterConfig.miniapp.description,
+      images: [farcasterConfig.miniapp.heroImageUrl],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: farcasterConfig.miniapp.name,
+      images: [farcasterConfig.miniapp.heroImageUrl],
+    },
     other: {
       "base:app_id": "6999aa5d26c8104af5f084d3",
       "fc:frame": JSON.stringify({
         version: farcasterConfig.miniapp.version,
         imageUrl: farcasterConfig.miniapp.heroImageUrl,
         button: {
-          title: `Join the ${farcasterConfig.miniapp.name} Waitlist`,
+          title: `Play ${farcasterConfig.miniapp.name}`,
           action: {
             name: `Launch ${farcasterConfig.miniapp.name}`,
             type: "launch_frame",
