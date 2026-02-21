@@ -11,6 +11,10 @@ interface BaseJumpGameProps {
 }
 
 export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJumpGameProps) {
+  const [isReady, setIsReady] = useState(false);
+  const [localUserName, setLocalUserName] = useState('');
+
+  // Setup game references
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { sendTransactionAsync } = useSendTransaction();
   const [dimensions, setDimensions] = useState({ width: 400, height: 600 });
@@ -51,14 +55,20 @@ export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJump
 
   // Load high score from local storage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('baseJumpHighScore');
-    if (saved) {
-      setHighScore(parseInt(saved, 10));
+    const savedHighScore = localStorage.getItem('baseJumpHighScore');
+    if (savedHighScore) {
+      setHighScore(parseInt(savedHighScore, 10));
     }
     const savedStreak = localStorage.getItem('baseJumpStreak');
     const savedLastCheckIn = localStorage.getItem('baseJumpLastCheckIn');
-    if (savedStreak) setStreak(parseInt(savedStreak, 10));
+    const savedLocalName = localStorage.getItem('baseJumpUserName');
+
+    if (savedHighScore) setHighScore(parseInt(savedHighScore));
+    if (savedStreak) setStreak(parseInt(savedStreak));
     if (savedLastCheckIn) setLastCheckIn(savedLastCheckIn);
+    if (savedLocalName) setLocalUserName(savedLocalName);
+
+    setIsReady(true);
   }, []);
 
   // Use a ref for the pause state so the game loop can read the latest value
@@ -339,11 +349,13 @@ export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJump
           currentFid = savedAnonFid;
         }
 
+        const finalUserName = userName || localUserName || `Anon${currentFid}`;
+
         if (currentFinalScore > 0) {
           // Fire and forget score save
           fetch('/api/leaderboard', {
             method: 'POST',
-            body: JSON.stringify({ fid: currentFid, username: userName, score: currentFinalScore }),
+            body: JSON.stringify({ fid: currentFid, username: finalUserName, score: currentFinalScore }),
             headers: { 'Content-Type': 'application/json' }
           }).catch(console.error);
         }
@@ -428,7 +440,35 @@ export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJump
       {!gameStarted && !isGameOver && !showLeaderboard && (
         <div className={styles.overlay}>
           <h2>BASE JUMP</h2>
-          {userFid && <p>Welcome back, {userName ? userName : `FID: ${userFid}`}!</p>}
+          {userName ? (
+            <p>Welcome back, {userName}!</p>
+          ) : (
+            <div style={{ marginBottom: '15px' }}>
+              <input
+                type="text"
+                placeholder="Enter Nickname"
+                maxLength={15}
+                value={localUserName}
+                onChange={(e) => {
+                  setLocalUserName(e.target.value);
+                  localStorage.setItem('baseJumpUserName', e.target.value);
+                }}
+                style={{
+                  padding: '10px',
+                  borderRadius: '8px',
+                  border: '2px solid #0052ff',
+                  background: 'rgba(255,255,255,0.9)',
+                  color: '#0052ff',
+                  fontFamily: 'inherit',
+                  textAlign: 'center',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  outline: 'none',
+                  width: '80%'
+                }}
+              />
+            </div>
+          )}
           <div className={styles.streakContainer}>
             <span>🔥 Streak: {streak}</span>
             <button
