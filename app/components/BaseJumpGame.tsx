@@ -11,7 +11,6 @@ interface BaseJumpGameProps {
 }
 
 export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJumpGameProps) {
-  const [isReady, setIsReady] = useState(false);
   const [localUserName, setLocalUserName] = useState('');
 
   // Setup game references
@@ -67,8 +66,6 @@ export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJump
     if (savedStreak) setStreak(parseInt(savedStreak));
     if (savedLastCheckIn) setLastCheckIn(savedLastCheckIn);
     if (savedLocalName) setLocalUserName(savedLocalName);
-
-    setIsReady(true);
   }, []);
 
   // Use a ref for the pause state so the game loop can read the latest value
@@ -404,7 +401,7 @@ export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJump
         canvas.removeEventListener('touchcancel', handleTouchEnd);
       }
     };
-  }, [gameStarted, gameId, highScore, onGameOver, userFid]);
+  }, [gameStarted, gameId, highScore, onGameOver, userFid, localUserName, userName]);
 
   const handleCheckIn = async () => {
     try {
