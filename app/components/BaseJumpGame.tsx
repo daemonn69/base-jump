@@ -85,8 +85,8 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
       platforms.push({ x: width / 2 - 40, y: height - 50, width: 80, height: 12, type: 0, bounceOffset: 0 }); // Starting platform
 
       for (let i = 0; i < 12; i++) {
-        let x = Math.random() * (width - 80);
-        let y = height - 150 - i * 70;
+        const x = Math.random() * (width - 80);
+        const y = height - 150 - i * 70;
         platforms.push({ x, y, width: 80, height: 12, type: 0, bounceOffset: 0 });
       }
     };
@@ -242,7 +242,7 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
       // Platform collision
       if (player.vy > 0) { // Only collide when falling
         for (let i = 0; i < platforms.length; i++) {
-          let p = platforms[i];
+          const p = platforms[i];
           if (
             player.x + player.width / 2 > p.x &&
             player.x + player.width / 2 < p.x + p.width &&
@@ -259,7 +259,7 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
 
       // Camera follow
       if (player.y < height / 2) {
-        let diff = (height / 2) - player.y;
+        const diff = (height / 2) - player.y;
         player.y += diff;
         currentScore += diff;
 
@@ -273,11 +273,11 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
       // Generate new platforms and remove old
       platforms = platforms.filter(p => p.y < height);
       while (platforms.length < 12) {
-        let highestY = Math.min(...platforms.map(p => p.y));
-        let x = Math.random() * (width - 80);
-        let y = highestY - (Math.random() * 50 * gapMultiplier + 50 * gapMultiplier);
+        const highestY = Math.min(...platforms.map(p => p.y));
+        const x = Math.random() * (width - 80);
+        const y = highestY - (Math.random() * 50 * gapMultiplier + 50 * gapMultiplier);
 
-        let isMoving = currentScore > 3000 && Math.random() < (0.1 + difficulty * 0.3);
+        const isMoving = currentScore > 3000 && Math.random() < (0.1 + difficulty * 0.3);
 
         platforms.push({
           x,
@@ -338,15 +338,14 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
 
-      const canvasEl = canvasRef.current;
-      if (canvasEl) {
-        canvasEl.removeEventListener('touchstart', handleTouchStart);
-        canvasEl.removeEventListener('touchmove', handleTouchMove);
-        canvasEl.removeEventListener('touchend', handleTouchEnd);
-        canvasEl.removeEventListener('touchcancel', handleTouchEnd);
+      if (canvas) {
+        canvas.removeEventListener('touchstart', handleTouchStart);
+        canvas.removeEventListener('touchmove', handleTouchMove);
+        canvas.removeEventListener('touchend', handleTouchEnd);
+        canvas.removeEventListener('touchcancel', handleTouchEnd);
       }
     };
-  }, [gameStarted, gameId]);
+  }, [gameStarted, gameId, highScore, onGameOver]);
 
   const handleCheckIn = async () => {
     try {
@@ -363,7 +362,7 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
 
       if (txHash) {
         const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-        let newStreak = (lastCheckIn === yesterday) ? streak + 1 : 1;
+        const newStreak = (lastCheckIn === yesterday) ? streak + 1 : 1;
 
         setStreak(newStreak);
         setLastCheckIn(today);
@@ -396,7 +395,7 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
           <div className={styles.highScoreTag}>HIGH SCORE: {highScore}</div>
           <p>
             Tap & hold left or right to move.<br />
-            Let's go TO THE MOON! 🚀
+            Let&apos;s go TO THE MOON! 🚀
           </p>
           <button className={styles.button} onClick={() => setGameStarted(true)}>
             START JUMP

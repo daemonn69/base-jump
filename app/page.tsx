@@ -18,8 +18,6 @@ interface AuthResponse {
 export default function Home() {
   const { context, isReady } = useMiniApp();
   const [authData, setAuthData] = useState<AuthResponse | null>(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [authError, setAuthError] = useState<Error | null>(null);
 
   useEffect(() => {
     const authenticate = async () => {
@@ -28,9 +26,7 @@ export default function Home() {
         const data = await response.json();
         setAuthData(data);
       } catch (err) {
-        setAuthError(err as Error);
-      } finally {
-        setIsAuthLoading(false);
+        console.error(err);
       }
     };
 
