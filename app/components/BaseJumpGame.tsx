@@ -243,10 +243,10 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
         for (let i = 0; i < platforms.length; i++) {
           const p = platforms[i];
           if (
-            player.x + player.width / 2 > p.x &&
-            player.x + player.width / 2 < p.x + p.width &&
-            player.y + player.height > p.y &&
-            player.y + player.height < p.y + p.height + player.vy + 2
+            player.x + player.width > p.x - 10 &&
+            player.x < p.x + p.width + 10 &&
+            player.y + player.height > p.y - 10 &&
+            player.y + player.height < p.y + p.height + player.vy + 10
           ) {
             player.vy = player.jumpForce;
             p.bounceOffset = 10; // Trigger bounce animation down
