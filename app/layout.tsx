@@ -28,6 +28,9 @@ export async function generateMetadata(): Promise<Metadata> {
           title: `Play ${farcasterConfig.miniapp.name}`,
           action: {
             name: `Launch ${farcasterConfig.miniapp.name}`,
+            url: farcasterConfig.miniapp.homeUrl,
+            splashImageUrl: farcasterConfig.miniapp.splashImageUrl,
+            splashBackgroundColor: farcasterConfig.miniapp.splashBackgroundColor,
             type: "launch_frame",
           },
         },
