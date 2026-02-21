@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
-import sdk from '@farcaster/miniapp-sdk';
 import { useSendTransaction } from 'wagmi';
 import styles from './BaseJumpGame.module.css';
 
@@ -54,7 +53,7 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
     const height = canvas.height;
 
     let platforms: { x: number, y: number, width: number, height: number, type: number, moving?: boolean, direction?: number, bounceOffset?: number }[] = [];
-    let player = {
+    const player = {
       x: width / 2 - 20,
       y: height - 150,
       width: 40,
@@ -65,8 +64,7 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
       speed: 6
     };
 
-    let gravity = 0.4;
-    let cameraY = 0;
+    const gravity = 0.4;
     let currentScore = 0;
     let gameLoopId: number;
 
