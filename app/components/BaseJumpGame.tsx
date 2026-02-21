@@ -87,11 +87,11 @@ export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJump
       height: 40,
       vx: 0,
       vy: 0,
-      jumpForce: -10, // Faster jump
-      speed: 6
+      jumpForce: -13, // Snappier, faster jump
+      speed: 7.5      // Faster horizontal movement
     };
 
-    const gravity = 0.3; // Higher gravity
+    const gravity = 0.55; // Much higher gravity for snappier fall
     let currentScore = 0;
     let gameLoopId: number;
 
