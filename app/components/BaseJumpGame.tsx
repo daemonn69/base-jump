@@ -69,11 +69,11 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
       height: 40,
       vx: 0,
       vy: 0,
-      jumpForce: -10, // Slower tempo
+      jumpForce: -8.5, // Even slower floaty jump
       speed: 6
     };
 
-    const gravity = 0.3; // Slower tempo
+    const gravity = 0.2; // Lower gravity
     let currentScore = 0;
     let gameLoopId: number;
 
@@ -187,15 +187,23 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
       ctx.fill();
     };
 
+    let lastTime = 0;
     // Update function
-    const update = () => {
+    const update = (time: number) => {
       // Pause check
       if (isPausedRef.current) {
-        // If paused, just draw the current frame and loop
         draw();
         gameLoopId = requestAnimationFrame(update);
         return;
       }
+
+      // 60 FPS cap to prevent 120hz screens from running physics at 2x speed
+      const dt = time - lastTime;
+      if (dt < 16.6) {
+        gameLoopId = requestAnimationFrame(update);
+        return;
+      }
+      lastTime = time - (dt % 16.6);
 
       // Player movement
       if (touchX !== null) {
