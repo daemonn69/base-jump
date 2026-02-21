@@ -12,6 +12,7 @@ interface BaseJumpGameProps {
 export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { sendTransactionAsync } = useSendTransaction();
+  const [dimensions, setDimensions] = useState({ width: 400, height: 600 });
   const [isGameOver, setIsGameOver] = useState(false);
   const [score, setScore] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
@@ -21,6 +22,14 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
   const [streak, setStreak] = useState(0);
   const [lastCheckIn, setLastCheckIn] = useState<string | null>(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
+
+  // Set fullscreen dimensions on client side
+  useEffect(() => {
+    const updateDims = () => setDimensions({ width: window.innerWidth, height: window.innerHeight });
+    updateDims();
+    window.addEventListener('resize', updateDims);
+    return () => window.removeEventListener('resize', updateDims);
+  }, []);
 
   // Load high score from local storage on mount
   useEffect(() => {
@@ -60,11 +69,11 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
       height: 40,
       vx: 0,
       vy: 0,
-      jumpForce: -12,
+      jumpForce: -10, // Slower tempo
       speed: 6
     };
 
-    const gravity = 0.4;
+    const gravity = 0.3; // Slower tempo
     let currentScore = 0;
     let gameLoopId: number;
 
@@ -74,22 +83,7 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
     };
 
     // Touch controls
-    let isTouchingLeft = false;
-    let isTouchingRight = false;
-
-    // Initialize platforms
-    const initPlatforms = () => {
-      platforms = [];
-      platforms.push({ x: width / 2 - 40, y: height - 50, width: 80, height: 12, type: 0, bounceOffset: 0 }); // Starting platform
-
-      for (let i = 0; i < 12; i++) {
-        const x = Math.random() * (width - 80);
-        const y = height - 150 - i * 70;
-        platforms.push({ x, y, width: 80, height: 12, type: 0, bounceOffset: 0 });
-      }
-    };
-
-    initPlatforms();
+    let touchX: number | null = null;
 
     // Event Listeners
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -104,34 +98,22 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
     const handleTouch = (e: TouchEvent) => {
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
-      const x = touch.clientX - rect.left;
-
-      if (x < player.x + player.width / 2 - 10) {
-        isTouchingLeft = true;
-        isTouchingRight = false;
-      } else if (x > player.x + player.width / 2 + 10) {
-        isTouchingRight = true;
-        isTouchingLeft = false;
-      } else {
-        isTouchingLeft = false;
-        isTouchingRight = false;
-      }
+      touchX = touch.clientX - rect.left;
     };
 
     const handleTouchStart = (e: TouchEvent) => {
-      e.preventDefault();
+      if (e.cancelable) e.preventDefault();
       handleTouch(e);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
+      if (e.cancelable) e.preventDefault();
       handleTouch(e);
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      e.preventDefault();
-      isTouchingLeft = false;
-      isTouchingRight = false;
+      if (e.cancelable) e.preventDefault();
+      touchX = null;
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -202,16 +184,21 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
       }
 
       // Player movement
-      if (keys.ArrowLeft || isTouchingLeft) {
+      if (touchX !== null) {
+        const targetX = touchX - player.width / 2;
+        player.x += (targetX - player.x) * 0.2; // Smooth tracking
+        player.vx = 0;
+      } else if (keys.ArrowLeft) {
         player.vx = -player.speed;
-      } else if (keys.ArrowRight || isTouchingRight) {
+        player.x += player.vx;
+      } else if (keys.ArrowRight) {
         player.vx = player.speed;
+        player.x += player.vx;
       } else {
         player.vx *= 0.8; // Friction
         if (Math.abs(player.vx) < 0.1) player.vx = 0;
+        player.x += player.vx;
       }
-
-      player.x += player.vx;
 
       // Screen wrap
       if (player.x + player.width < 0) player.x = width;
@@ -459,8 +446,8 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
 
       <canvas
         ref={canvasRef}
-        width={400}
-        height={600}
+        width={dimensions.width}
+        height={dimensions.height}
         className={styles.canvas}
       />
     </div>
