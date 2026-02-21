@@ -69,11 +69,11 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
       height: 40,
       vx: 0,
       vy: 0,
-      jumpForce: -8.5, // Even slower floaty jump
+      jumpForce: -10, // Faster jump
       speed: 6
     };
 
-    const gravity = 0.2; // Lower gravity
+    const gravity = 0.3; // Higher gravity
     let currentScore = 0;
     let gameLoopId: number;
 
