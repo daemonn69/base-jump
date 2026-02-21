@@ -296,6 +296,7 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
       // Game over condition
       if (player.y > height) {
         setIsGameOver(true);
+        setGameStarted(false); // Stop game loop from unmounting and remounting with zero score
         if (currentFinalScore > highScore) {
           setHighScore(currentFinalScore);
           localStorage.setItem('baseJumpHighScore', currentFinalScore.toString());
