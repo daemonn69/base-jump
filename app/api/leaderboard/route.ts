@@ -9,18 +9,17 @@ export async function GET() {
     // We fallback to empty array if no config
     if (!url || !token) {
         console.log("Redis not configured properly. Missing UPSTASH_ENV or KV_ENV var.");
-        return NextResponse.json([]);
+        return NextResponse.json([{ fid: "MISSING_ENV_VARS_LOCALLY", score: 0 }]);
     }
 
     try {
-        // Vercel KV / Upstash generic POST JSON RPC format
         const res = await fetch(url, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(["ZREVRANGE", "base_jump_leaderboard", 0, 19, "WITHSCORES"]),
+            body: JSON.stringify(["ZREVRANGE", "base_jump_leaderboard", "0", "19", "WITHSCORES"]),
             next: { revalidate: 0 }
         });
 
@@ -66,7 +65,7 @@ export async function POST(request: Request) {
         const scoreRes = await fetch(url, {
             method: "POST",
             headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-            body: JSON.stringify(["ZSCORE", "base_jump_leaderboard", fid])
+            body: JSON.stringify(["ZSCORE", "base_jump_leaderboard", fid.toString()])
         });
         const scoreBody = await scoreRes.json();
         const currentScore = scoreBody.result; // could be null if no score exists
@@ -76,7 +75,7 @@ export async function POST(request: Request) {
             await fetch(url, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-                body: JSON.stringify(["ZADD", "base_jump_leaderboard", score, fid])
+                body: JSON.stringify(["ZADD", "base_jump_leaderboard", score.toString(), fid.toString()])
             });
         }
 
@@ -84,5 +83,29 @@ export async function POST(request: Request) {
     } catch (error) {
         console.error('Failed to save score:', error);
         return NextResponse.json({ error: 'Failed to save score' }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: Request) {
+    const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+    const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+    if (!url || !token) {
+        return NextResponse.json({ error: 'Redis is not configured' }, { status: 500 });
+    }
+
+    try {
+        const { fid } = await request.json();
+        if (!fid) return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
+
+        await fetch(url, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify(["ZREM", "base_jump_leaderboard", fid.toString()])
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        return NextResponse.json({ error: 'Failed' }, { status: 500 });
     }
 }

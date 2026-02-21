@@ -327,11 +327,14 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
           localStorage.setItem('baseJumpHighScore', currentFinalScore.toString());
         }
 
-        if (userFid && currentFinalScore > 0) {
+        // Use real FID or a mock one for local browser testing
+        const currentFid = userFid || Math.floor(Math.random() * 100000);
+
+        if (currentFinalScore > 0) {
           // Fire and forget score save
           fetch('/api/leaderboard', {
             method: 'POST',
-            body: JSON.stringify({ fid: userFid, score: currentFinalScore }),
+            body: JSON.stringify({ fid: currentFid, score: currentFinalScore }),
             headers: { 'Content-Type': 'application/json' }
           }).catch(console.error);
         }
@@ -437,6 +440,24 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
           </button>
           <button className={styles.button} onClick={loadLeaderboard} style={{ marginTop: '10px' }}>
             GLOBAL TOP
+          </button>
+
+          <button
+            onClick={async () => {
+              if (confirm("Вы уверены что хотите обнулить свой рекорд?")) {
+                localStorage.removeItem('baseJumpHighScore');
+                setHighScore(0);
+                if (userFid) {
+                  await fetch('/api/leaderboard', { method: 'DELETE', body: JSON.stringify({ fid: userFid }) });
+                  alert('Рекорд сброшен в базе!');
+                } else {
+                  alert('Рекорд сброшен локально!');
+                }
+              }
+            }}
+            style={{ marginTop: '20px', fontSize: '12px', background: 'transparent', color: '#ff4d4f', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-source-code-pro), monospace' }}
+          >
+            [Сбросить рекорд]
           </button>
         </div>
       )}
