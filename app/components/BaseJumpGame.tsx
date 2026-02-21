@@ -85,6 +85,20 @@ export default function BaseJumpGame({ onGameOver, userFid }: BaseJumpGameProps)
     // Touch controls
     let touchX: number | null = null;
 
+    // Initialize platforms
+    const initPlatforms = () => {
+      platforms = [];
+      platforms.push({ x: width / 2 - 40, y: height - 50, width: 80, height: 12, type: 0, bounceOffset: 0 }); // Starting platform
+
+      for (let i = 0; i < 12; i++) {
+        const x = Math.random() * (width - 80);
+        const y = height - 150 - i * 70;
+        platforms.push({ x, y, width: 80, height: 12, type: 0, bounceOffset: 0 });
+      }
+    };
+
+    initPlatforms();
+
     // Event Listeners
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.ArrowLeft = true;
