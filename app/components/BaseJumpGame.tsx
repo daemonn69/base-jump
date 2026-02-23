@@ -52,7 +52,7 @@ export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJump
     return () => window.removeEventListener('resize', updateDims);
   }, []);
 
-  // Load high score from local storage on mount
+  // Load high score from local storage on mount + check streak validity
   useEffect(() => {
     const savedHighScore = localStorage.getItem('baseJumpHighScore');
     if (savedHighScore) {
@@ -62,9 +62,18 @@ export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJump
     const savedLastCheckIn = localStorage.getItem('baseJumpLastCheckIn');
     const savedLocalName = localStorage.getItem('baseJumpUserName');
 
-    if (savedHighScore) setHighScore(parseInt(savedHighScore));
-    if (savedStreak) setStreak(parseInt(savedStreak));
-    if (savedLastCheckIn) setLastCheckIn(savedLastCheckIn);
+    if (savedLastCheckIn) {
+      setLastCheckIn(savedLastCheckIn);
+      const today = new Date().toISOString().split('T')[0];
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+      if (savedLastCheckIn !== today && savedLastCheckIn !== yesterday) {
+        // Пропущен 1+ день → сброс стрика
+        setStreak(0);
+        localStorage.setItem('baseJumpStreak', '0');
+      } else if (savedStreak) {
+        setStreak(parseInt(savedStreak));
+      }
+    }
     if (savedLocalName) setLocalUserName(savedLocalName);
   }, []);
 
@@ -436,56 +445,56 @@ export default function BaseJumpGame({ onGameOver, userFid, userName }: BaseJump
     <div className={styles.gameContainer}>
       {!gameStarted && !isGameOver && !showLeaderboard && (
         <div className={styles.overlay}>
-          <h2>BASE JUMP</h2>
+          <div className={styles.menuCharacter}>🚀</div>
+          <div className={styles.menuTitle}>BASE JUMP</div>
+          <div className={styles.menuTagline}>Jump to the moon</div>
+          <div className={styles.menuDivider} />
+
           {userName ? (
-            <p>Welcome back, {userName}!</p>
+            <p style={{ margin: '0 0 12px', animation: 'fadeInUp 0.6s ease-out 0.15s both' }}>
+              Welcome back, <strong>{userName}</strong>!
+            </p>
           ) : (
-            <div style={{ marginBottom: '15px' }}>
-              <input
-                type="text"
-                placeholder="Enter Nickname"
-                maxLength={15}
-                value={localUserName}
-                onChange={(e) => {
-                  setLocalUserName(e.target.value);
-                  localStorage.setItem('baseJumpUserName', e.target.value);
-                }}
-                style={{
-                  padding: '10px',
-                  borderRadius: '8px',
-                  border: '2px solid #0052ff',
-                  background: 'rgba(255,255,255,0.9)',
-                  color: '#0052ff',
-                  fontFamily: 'inherit',
-                  textAlign: 'center',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  outline: 'none',
-                  width: '80%'
-                }}
-              />
-            </div>
+            <input
+              type="text"
+              placeholder="Enter Nickname"
+              maxLength={15}
+              value={localUserName}
+              onChange={(e) => {
+                setLocalUserName(e.target.value);
+                localStorage.setItem('baseJumpUserName', e.target.value);
+              }}
+              className={styles.nicknameInput}
+            />
           )}
-          <div className={styles.streakContainer}>
-            <span>🔥 Streak: {streak}</span>
+
+          <div className={styles.streakCard}>
+            <span className={styles.streakFire}>🔥</span>
+            <div className={styles.streakInfo}>
+              <span className={styles.streakLabel}>Daily Streak</span>
+              <span className={styles.streakNumber}>{streak}</span>
+            </div>
             <button
               className={styles.checkInButton}
               onClick={handleCheckIn}
               disabled={lastCheckIn === new Date().toISOString().split('T')[0] || isCheckingIn}
             >
-              {isCheckingIn ? "Checking..." : lastCheckIn === new Date().toISOString().split('T')[0] ? "Checked In ✓" : "Daily Check-In"}
+              {isCheckingIn ? "..." : lastCheckIn === new Date().toISOString().split('T')[0] ? "Done ✓" : "Check In"}
             </button>
           </div>
-          <div className={styles.highScoreTag}>HIGH SCORE: {highScore}</div>
-          <p>
-            Tap & hold left or right.<br />
-            Let&apos;s go TO THE MOON! 🚀
-          </p>
-          <button className={styles.button} onClick={() => setGameStarted(true)}>
+
+          <div className={styles.highScoreTag}>🏆 BEST: {highScore}</div>
+
+          <div className={styles.menuInstructions}>
+            Tap &amp; hold left or right<br />
+            Let&apos;s go TO THE MOON! 🌙
+          </div>
+
+          <button className={styles.primaryButton} onClick={() => setGameStarted(true)}>
             START JUMP
           </button>
-          <button className={styles.button} onClick={loadLeaderboard} style={{ marginTop: '10px' }}>
-            GLOBAL TOP
+          <button className={styles.secondaryButton} onClick={loadLeaderboard} style={{ marginTop: '10px' }}>
+            🏅 GLOBAL TOP
           </button>
         </div>
       )}
